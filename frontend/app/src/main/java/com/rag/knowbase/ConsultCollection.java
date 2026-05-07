@@ -16,7 +16,8 @@ public class ConsultCollection extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_consult_collection);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.consult_collection), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() );
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
