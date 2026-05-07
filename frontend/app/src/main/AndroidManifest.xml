@@ -12,6 +12,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KnowBase">
         <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ChatbotActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ConsultCollection"
             android:exported="false" />
         <activity
@@ -19,6 +32,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -30,7 +44,8 @@
             android:exported="false" />
         <activity
             android:name=".CollectionPage"
-            android:exported="false" />
+            android:exported="false"
+            />
     </application>
 
 </manifest>

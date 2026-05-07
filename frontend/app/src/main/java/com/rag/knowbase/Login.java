@@ -10,6 +10,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+
+
+
 public class Login extends AppCompatActivity {
 
     @Override
@@ -18,15 +21,17 @@ public class Login extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.login_page), (v, insets) -> {
+            //modification ici pour prendre en compte le clavier
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
     }
 
 
     public void handleLoginClick(View v){
-        Intent intent = new Intent(v.getContext(), CollectionPage.class);
+        Intent intent = new Intent(v.getContext(), HomeActivity.class);
         startActivity(intent);
     }
 
