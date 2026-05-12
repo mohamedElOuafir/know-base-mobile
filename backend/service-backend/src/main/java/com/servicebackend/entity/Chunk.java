@@ -19,6 +19,7 @@ public class Chunk {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idChunk;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Column(

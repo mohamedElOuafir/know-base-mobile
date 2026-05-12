@@ -2,6 +2,7 @@ package com.servicebackend.service;
 
 
 import com.servicebackend.dto.AuthResponse;
+import com.servicebackend.dto.UserRegisterDto;
 import com.servicebackend.entity.User;
 import com.servicebackend.exceptions.EmailAlreadyUsedException;
 import com.servicebackend.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -21,27 +23,66 @@ public class AuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private FileUploadService fileUploadService;
 
 
-    public User register(User user) {
-        if(userRepository.existsByEmail(user.getEmail())){
-            throw new EmailAlreadyUsedException(user.getEmail());
+    public AuthResponse register(UserRegisterDto userDto) {
+        if(userRepository.existsByEmail(userDto.getEmail())){
+            AuthResponse authResponse = new AuthResponse();
+            authResponse.setAuthenticated(false);
+            return authResponse;
         }
-        user.setPassword(encoder.encode(user.getPassword()));
-        return userRepository.save(user);
+
+
+        User newUser = new User();
+        newUser.setEmail(userDto.getEmail());
+        newUser.setPassword(encoder.encode(userDto.getPassword()));
+        newUser.setFirstName(userDto.getFirstName());
+        newUser.setLastName(userDto.getLastName());
+
+        if(userDto.getProfileImage() != null && !userDto.getProfileImage().isEmpty()) {
+            String profileImage = fileUploadService.uploadProfileImageToSupabase(userDto.getProfileImage());
+            newUser.setProfileImage(profileImage);
+        }
+
+        User savedUser = userRepository.save(newUser);
+        String token = jwtUtil.generateToken(savedUser.getEmail());
+
+
+        return new AuthResponse(
+                savedUser.getEmail(),
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getProfileImage(),
+                token,
+                true
+        );
     }
 
-    public AuthResponse login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(()-> new  RuntimeException("User not found"));
+    public Optional<AuthResponse> login(String email, String password) {
+        Optional<User> user = userRepository.findByEmail(email);
 
-        if (!encoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+        if (user.isPresent()) {
+            User currentUser = user.get();
+
+            if (encoder.matches(password, currentUser.getPassword())) {
+
+                String token = jwtUtil.generateToken(currentUser.getEmail());
+
+
+                return Optional.of(new AuthResponse(
+                        currentUser.getEmail(),
+                        currentUser.getFirstName(),
+                        currentUser.getLastName(),
+                        currentUser.getProfileImage(),
+                        token,
+                        true
+                ));
+            }
         }
+        return Optional.empty();
 
-        String token = jwtUtil.generateToken(user.getEmail());
-
-        return new AuthResponse(token, user.getEmail());
     }
 
     public List<User> getAllUser() {
@@ -51,5 +92,6 @@ public class AuthService {
     public void deleteAllUser() {
         userRepository.deleteAll();
     }
+
 
 }

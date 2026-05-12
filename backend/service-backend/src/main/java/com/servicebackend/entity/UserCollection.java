@@ -32,4 +32,7 @@ public class UserCollection {
 
     @OneToMany(mappedBy = "collection",cascade = CascadeType.ALL)
     private List<FileUploaded> fileUploadeds;
+
+    @OneToMany(mappedBy = "userCollection", cascade = CascadeType.ALL)
+    private List<Chat> chats;
 }

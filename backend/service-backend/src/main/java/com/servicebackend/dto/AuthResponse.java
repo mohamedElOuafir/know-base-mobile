@@ -10,7 +10,11 @@ import lombok.*;
 @AllArgsConstructor
 public class AuthResponse {
 
-    private String token;
     private String email;
+    private String firstName;
+    private String lasName;
+    private String profileImage;
+    private String token;
+    private boolean authenticated;
 
 }

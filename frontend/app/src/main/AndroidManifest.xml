@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -12,23 +13,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KnowBase">
         <activity
-            android:name=".HomeActivity"
+            android:name=".view.activity.HomeActivity"
             android:exported="false" />
         <activity
-            android:name=".ProfileActivity"
+            android:name=".view.activity.ProfileActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".ChatbotActivity"
+            android:name=".view.activity.ChatbotActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".ConsultCollection"
+            android:name=".view.activity.ConsultCollection"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,13 +38,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Signup"
+            android:name=".view.activity.Signup"
             android:exported="false" />
         <activity
-            android:name=".Login"
+            android:name=".view.activity.Login"
             android:exported="false" />
         <activity
-            android:name=".CollectionPage"
+            android:name=".view.activity.CollectionPage"
             android:exported="false"
             />
     </application>

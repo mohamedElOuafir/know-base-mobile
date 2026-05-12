@@ -17,13 +17,11 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idMessage;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
     private Date createdAt;
 
-    private enum senderRole{
-        user,
-        boot
-    };
+    private String senderRole;
 
     @ManyToOne
     @JoinColumn(name = "idChat")

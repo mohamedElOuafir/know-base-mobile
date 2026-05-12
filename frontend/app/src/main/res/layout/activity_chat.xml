@@ -8,7 +8,7 @@
     tools:openDrawer="start">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/activity_chat"
+        android:id="@+id/chat_page_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#343541">
@@ -33,8 +33,10 @@
             android:padding="12dp"
             app:layout_constraintBottom_toTopOf="@+id/layout_bottom_input"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Menu" />
+            app:layout_constraintTop_toBottomOf="@+id/Menu"
+            app:layout_constraintVertical_bias="0.0" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_bottom_input"
@@ -93,7 +95,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/edit_text_message"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/edit_text_message"
-                app:tint="#FFFFFF" />
+                app:tint="@color/white" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

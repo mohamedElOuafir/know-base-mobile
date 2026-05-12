@@ -1,7 +1,6 @@
 spring:
   application:
     name: service-backend
-
   kafka:
     admin:
       auto-create: true
@@ -33,14 +32,20 @@ spring:
       password: ${SECURITY_PASSWORD}
 
 
-  config:
-      activate:
-        on-profile: prod
-
-
 jwt:
-    secret: ${JWT_SECRET:defaultDevSecretKey12345678901234567890}
+    secret: ${SECRET_KEY:defaultDevSecretKey12345678901234567890}
     expiration: ${JWT_EXPIRATION:86400000}
 
+
+supabase:
+  url: ${SUPABASE_BUCKET_URL}
+  api-key: ${SUPABASE_API_KEY}
+
+rag-service:
+  url: ${RAG_SERVICE_URL}
+
+
+server:
+  port: 8080
 
 

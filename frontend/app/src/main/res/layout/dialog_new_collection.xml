@@ -12,7 +12,6 @@
         android:padding="24dp"
         android:background="@android:color/white">
 
-    <!-- Petite barre de saisie en haut du dialogue -->
         <View
             android:layout_width="40dp"
             android:layout_height="4dp"
@@ -29,7 +28,6 @@
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
 
-        <!-- CHAMP : NAME -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -78,15 +76,50 @@
             android:id="@+id/editDescription"
             android:layout_width="match_parent"
             android:layout_height="100dp"
+            android:layout_marginBottom="20dp"
             android:background="@drawable/bg_profile_input"
-            android:hint="What is this collection about?"
-            android:textColorHint="@color/grey"
-            android:textColor="@color/black"
-            android:padding="16dp"
             android:gravity="top"
+            android:hint="What is this collection about?"
             android:inputType="textMultiLine"
-            android:layout_marginBottom="20dp" />
-        <!-- ZONE D'UPLOAD -->
+            android:padding="16dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="First Chat Name"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#4B5563"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:layout_marginBottom="20dp"
+            android:hint="Name your first chat:"
+            android:textColorHint="@color/grey"
+            app:boxCornerRadiusTopStart="25dp"
+            app:boxCornerRadiusTopEnd="25dp"
+            app:boxCornerRadiusBottomStart="25dp"
+            app:boxCornerRadiusBottomEnd="25dp"
+            app:boxBackgroundColor="@color/bg_input"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeColor="@color/blue"
+            app:hintTextColor="@color/blue"
+            app:cursorColor="@color/blue">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editFirstChatName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/black" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -121,7 +154,15 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- BOUTON DE CRÉATION -->
+        <!-- List selected files -->
+        <LinearLayout
+            android:id="@+id/selectedFilesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCreateConfirm"
             android:layout_width="match_parent"

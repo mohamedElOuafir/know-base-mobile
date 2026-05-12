@@ -2,7 +2,9 @@ package com.servicebackend.controller;
 
 
 
-import com.servicebackend.dto.CollectionDto;
+
+import com.servicebackend.dto.CollectionDetailsDto;
+import com.servicebackend.dto.CollectionRequestDto;
 import com.servicebackend.entity.UserCollection;
 import com.servicebackend.service.CollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +24,23 @@ public class CollectionController {
     private CollectionService collectionService;
 
     @PostMapping
-    public ResponseEntity<?> addCollection(Authentication authentication,
-                                           @ModelAttribute CollectionDto collection){
+    public ResponseEntity<CollectionDetailsDto> addCollection(Authentication authentication,
+                                           @ModelAttribute CollectionRequestDto collection){
 
         String email = authentication.getName();
+        CollectionDetailsDto savedCollection = collectionService.createUserCollection(email,collection);
 
-        collectionService.createUserCollection(email,collection);
-
-        return  ResponseEntity.ok().body(Map.of("added",true));
+        return  ResponseEntity.ok().body(savedCollection);
     }
 
     @GetMapping
-    public List<UserCollection> getAll(Authentication authentication) {
+    public List<CollectionDetailsDto> getAll(Authentication authentication) {
 
         String email = authentication.getName();
 
         return collectionService.getCollectionsByUser(email);
     }
+
+
 
 }
