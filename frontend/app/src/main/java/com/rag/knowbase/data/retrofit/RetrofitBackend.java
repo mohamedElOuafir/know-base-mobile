@@ -5,14 +5,15 @@ import com.rag.knowbase.data.api.DashboardApi;
 import com.rag.knowbase.data.api.FileUploadedApi;
 import com.rag.knowbase.data.api.MessageApi;
 import com.rag.knowbase.data.api.UserApi;
-import com.rag.knowbase.model.FileUploaded;
+
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitBackend {
 
-    private static final String url = "http://192.168.11.102:8080";
+
+    private static final String url = "http://192.168.11.108:8080";
     private static Retrofit retrofit;
 
     public static Retrofit getClient(){

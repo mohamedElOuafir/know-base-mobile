@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
+        android:screenOrientation="portrait"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KnowBase">
         <activity
+
             android:name=".view.activity.HomeActivity"
             android:exported="false" />
         <activity

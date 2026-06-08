@@ -1,5 +1,6 @@
 package com.rag.knowbase.view.adapter;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,9 @@ import com.rag.knowbase.R;
 import com.rag.knowbase.model.FileUploaded;
 
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class UploadedFileAdapter extends RecyclerView.Adapter<UploadedFileAdapter.ViewHolder> {
 
@@ -34,8 +37,11 @@ public class UploadedFileAdapter extends RecyclerView.Adapter<UploadedFileAdapte
 
         public void bind(FileUploaded uploadedFile){
             name.setText(uploadedFile.getFileName());
-            String meta = uploadedFile.getSize().toString() + " · " + uploadedFile.getUploadedAt().toString();
-            metaData.setText(meta);
+            Float sizeMegaBit = (float) uploadedFile.getSize() / (1000 * 1000);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault());
+            String fileSize = String.format("%.2f", sizeMegaBit);
+            String date = sdf.format(uploadedFile.getUploadedAt());
+            metaData.setText(String.valueOf( fileSize + " MB · " + date));
         }
     }
 

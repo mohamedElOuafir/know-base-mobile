@@ -21,7 +21,7 @@ public class SessionManager {
 
 
     public void saveUser(UserResponseDto user) {
-        String json = gson.toJson(user);
+        String json = gson.toJson(user); //serialization
         prefs.edit().putString(KEY_USER, json).apply();
     }
 

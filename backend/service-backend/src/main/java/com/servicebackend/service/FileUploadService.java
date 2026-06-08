@@ -35,6 +35,8 @@ public class FileUploadService {
     private UserCollectionRepository userCollectionRepository;
     @Autowired
     private FileUploadedRepository fileUploadedRepository;
+    @Autowired
+    private KafkaService kafkaService;
 
 
     public String uploadTextFileToSupabase(MultipartFile file) throws FileNotUploadedException {
@@ -184,6 +186,7 @@ public class FileUploadService {
         fileUploaded.setCollection(collection);
 
         FileUploaded fileUploadedSaved = fileUploadedRepository.save(fileUploaded);
+        kafkaService.sendUploadedFileToKafka(fileUploadedSaved);
 
         FileUploadedDto fileUploadedDto = new FileUploadedDto();
         fileUploadedDto.setIdFileUploaded(fileUploadedSaved.getIdFileUploaded());
@@ -192,6 +195,8 @@ public class FileUploadService {
         fileUploadedDto.setPath(fileUploadedSaved.getPath());
         fileUploadedDto.setType(fileUploadedSaved.getType());
         fileUploadedDto.setSize(fileUploadedSaved.getSize());
+
+
 
         return fileUploadedDto;
 

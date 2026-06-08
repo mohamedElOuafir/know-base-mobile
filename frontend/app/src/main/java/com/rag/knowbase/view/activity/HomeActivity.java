@@ -49,8 +49,12 @@ public class HomeActivity extends AppCompatActivity {
 
         if(user.getProfileImage() != null) {
             profileImage = findViewById(R.id.profileImage);
-            profileImage.clearColorFilter();
-            Glide.with(this).load(user.getProfileImage()).into(profileImage);
+            profileImage.setImageTintList(null);
+            Glide.with(this)
+                    .load(user.getProfileImage())
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_profile)
+                    .into(profileImage);
         }
         userName = findViewById(R.id.tvUserName);
         chatsCount = findViewById(R.id.totalChatsDashboard);

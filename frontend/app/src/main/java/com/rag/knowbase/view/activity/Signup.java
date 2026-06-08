@@ -16,6 +16,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.rag.knowbase.R;
 import com.rag.knowbase.data.api.UserApi;
@@ -45,6 +46,7 @@ public class Signup extends AppCompatActivity {
     private TextView imagelabel;
     private Button uploadImageButton;
     private Button signupButton;
+    private CircularProgressIndicator signupAnimation;
     private Uri selectedImageUri;
 
 
@@ -57,7 +59,6 @@ public class Signup extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_signup);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.signup_page), (v, insets) -> {
-            //modification ici pour prendre en compte le clavier
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -69,7 +70,7 @@ public class Signup extends AppCompatActivity {
             galleryLauncher.launch("image/*");
         });
         signupButton.setOnClickListener(v -> {
-            signupButton.setEnabled(false);
+            showLoading();
             signupUser();
         });
     }
@@ -92,6 +93,8 @@ public class Signup extends AppCompatActivity {
         uploadImageButton = findViewById(R.id.uploadProfile);
 
         signupButton = findViewById(R.id.SignupButton);
+
+        signupAnimation = findViewById(R.id.SignupAnimation);
     }
 
     private void setupGalleryLauncher() {
@@ -157,21 +160,21 @@ public class Signup extends AppCompatActivity {
                             handleSignupSuccessfull();
 
                         }
-                        signupButton.setEnabled(true);
+                        hideLoading();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<UserResponseDto> call, Throwable t) {
                     errorMessage.setText("Network problem!");
-                    signupButton.setEnabled(true);
+                    hideLoading();
                 }
             });
 
         } catch (Exception e) {
             e.printStackTrace();
             errorMessage.setText("Error uploading image");
-            signupButton.setEnabled(true);
+            hideLoading();
         }
     }
 
@@ -202,6 +205,18 @@ public class Signup extends AppCompatActivity {
         return tempFile;
     }
 
+
+    private void showLoading() {
+        signupButton.setEnabled(false);
+        signupButton.setText("");
+        signupAnimation.setVisibility(View.VISIBLE);
+    }
+
+    private void hideLoading() {
+        signupButton.setEnabled(true);
+        signupButton.setText("Sign Up");
+        signupAnimation.setVisibility(View.GONE);
+    }
 
     public void handleSignupSuccessfull(){
         Intent intent = new Intent(this, HomeActivity.class);

@@ -9,10 +9,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ChatApi {
-    @POST("/chats/{idCollection}")
+    @POST("/chat/{idCollection}")
     Call<ChatDto> createChat(
             @Header("Authorization") String token,
             @Path("idCollection") Long idCollection,
-            @Query("chanName") String chatName
+            @Query("chatName") String chatName
     );
 }

@@ -26,11 +26,9 @@ public class CollectionService {
     private ChatRepository chatRepository;
     @Autowired
     private FileUploadService fileUploadService;
-
-
-
     @Autowired
-    private KafkaTemplate<String, FileUploadedDto> kafkaTemplateFileUploaded;
+    private KafkaService kafkaService;
+
 
 
     public CollectionDetailsDto createUserCollection(String email, CollectionRequestDto collection) {
@@ -63,7 +61,7 @@ public class CollectionService {
         UserCollection collectionSaved = userCollectionRepository.save(userCollection);
 
         if (!listFileUploaded.isEmpty()) {
-            sendUploadedFilesToKafka(collectionSaved.getFileUploadeds());
+            kafkaService.sendUploadedFilesListToKafka(collectionSaved.getFileUploadeds());
         }
 
         // First chat
@@ -106,18 +104,7 @@ public class CollectionService {
 
 
 
-    public void sendUploadedFilesToKafka(List<FileUploaded> listFileUploaded){
-        for(FileUploaded file : listFileUploaded){
-            FileUploadedDto fileUploadedDto =  new FileUploadedDto();
 
-            fileUploadedDto.setPath(file.getPath());
-            fileUploadedDto.setType(file.getType());
-            fileUploadedDto.setIdFileUploaded(file.getIdFileUploaded());
-
-            kafkaTemplateFileUploaded.send("file-uploaded-topic", fileUploadedDto);
-        }
-
-    }
 
     public List<UserCollection> userCollectionlist(Long idUser){
         return userCollectionRepository.findByUserIdUser(idUser);

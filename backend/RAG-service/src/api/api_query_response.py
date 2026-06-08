@@ -18,7 +18,7 @@ app.add_middleware(
 
 
 
-@app.get("/query")
+@app.post("/query")
 async def response_query(req: Request):
     body = await req.json()
     query = body["query"]

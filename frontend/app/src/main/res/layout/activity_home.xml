@@ -53,6 +53,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_profile"
+                android:scaleType="fitXY"
                 app:tint="@color/blue"/>
         </androidx.cardview.widget.CardView>
     </LinearLayout>
@@ -95,7 +96,7 @@
                             android:id="@+id/totalChatsDashboard"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="128"
+                            android:text="_"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#378ADD"
@@ -131,7 +132,7 @@
                             android:id="@+id/totalFilesDashboard"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="42"
+                            android:text="_"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#378ADD"
@@ -288,14 +289,7 @@
             app:tint="#FFFFFF"
             app:elevation="5dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Quick Add"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp"
-            android:textColor="#212121"/>
+
     </LinearLayout>
 
     <LinearLayout

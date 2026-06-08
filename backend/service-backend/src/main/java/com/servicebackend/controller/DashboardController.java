@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dashboard")
-@CrossOrigin(origins = "*")
 public class DashboardController {
     @Autowired
     private DashboardService dashboardService;

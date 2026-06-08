@@ -158,14 +158,15 @@
                 android:gravity="center"
                 android:background="@drawable/collection_stats_consult"
                 android:padding="10dp"
-                android:layout_marginStart="5dp">
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp">
 
                 <TextView
                     android:id="@+id/tvStatDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mar 12"
-                    android:textSize="16sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/white" />
 

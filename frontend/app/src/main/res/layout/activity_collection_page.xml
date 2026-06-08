@@ -63,7 +63,7 @@
 
             <!-- Search field -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/searchCollectionInput"
+                android:id="@+id/search_collection_input_layout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -94,6 +94,7 @@
                     android:inputType="text"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
+                    android:id="@+id/searchCollectionInput"
                     />
 
             </com.google.android.material.textfield.TextInputLayout>

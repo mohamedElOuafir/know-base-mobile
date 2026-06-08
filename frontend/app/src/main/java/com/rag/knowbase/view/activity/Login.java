@@ -35,10 +35,19 @@ public class Login extends AppCompatActivity {
     private TextView errorMessage;
     private Button loginButton;
     private CircularProgressIndicator loginAnimation;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sessionManager = new SessionManager(this);
+        if(sessionManager.isLoggedIn()){
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+            return;
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.login_page), (v, insets) -> {
@@ -47,6 +56,9 @@ public class Login extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+
 
         email = findViewById(R.id.emailLogin);
         password = findViewById(R.id.passwordLogin);

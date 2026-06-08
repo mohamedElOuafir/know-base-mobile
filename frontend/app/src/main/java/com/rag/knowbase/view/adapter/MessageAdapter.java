@@ -33,7 +33,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        //ici j'ai crèe la vue pour chaque message en fonction du type de message
+
         if (viewType == VIEW_TYPE_USER) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_chat_user, parent, false);
@@ -49,7 +49,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message message = messageList.get(position);
 
-        // ici je remplis la vue avec les données du message
+
         if (holder.getItemViewType() == VIEW_TYPE_USER) {
             UserViewHolder userHolder = (UserViewHolder) holder;
             userHolder.textMessageUser.setText(message.getContent());
@@ -65,7 +65,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
 
-    //pour éviter de chercher les vues à chaque fois
+
     public static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView textMessageUser;
 

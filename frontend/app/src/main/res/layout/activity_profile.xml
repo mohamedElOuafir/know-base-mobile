@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,40 +9,65 @@
     android:background="#0D1B2A"
     tools:context=".view.activity.ProfileActivity">
 
-    <!-- Hero gradient background header -->
+    <!-- Hero gradient background header — fixé en haut -->
     <View
-        android:layout_width="match_parent"
+        android:id="@+id/heroBackground"
+        android:layout_width="0dp"
         android:layout_height="320dp"
-        android:background="@drawable/bg_profile_hero" />
+        android:background="@drawable/bg_profile_hero"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Decorative circle accent top-right -->
+    <!-- Decorative circle top-right -->
     <View
         android:layout_width="180dp"
         android:layout_height="180dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="-40dp"
-        android:layout_marginEnd="-40dp"
         android:background="@drawable/bg_circle_accent"
-        android:alpha="0.18" />
+        android:alpha="0.18"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="-40dp"
+        android:layout_marginEnd="-40dp" />
 
-    <!-- Decorative circle accent bottom-left -->
+    <!-- Decorative circle top-left -->
     <View
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:layout_gravity="top|start"
-        android:layout_marginTop="160dp"
-        android:layout_marginStart="-30dp"
         android:background="@drawable/bg_circle_accent"
-        android:alpha="0.10" />
+        android:alpha="0.10"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="160dp"
+        android:layout_marginStart="-30dp" />
 
+    <!-- NavBar — ancré en bas, au-dessus du clavier grâce à windowSoftInputMode -->
+    <include
+        android:id="@+id/nav_bar"
+        layout="@layout/nav_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ScrollView entre le haut et la navbar -->
     <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/nav_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
 
             <!-- Top Bar -->
             <LinearLayout
@@ -56,15 +81,6 @@
                 android:paddingTop="52dp"
                 android:paddingBottom="16dp">
 
-                <ImageButton
-                    android:id="@+id/btnBack"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="@drawable/bg_back_button"
-                    android:contentDescription="Back"
-                    android:src="@drawable/arrow_left_icon"
-                    android:padding="10dp"
-                    app:tint="@color/white" />
 
                 <TextView
                     android:id="@+id/tvTitle"
@@ -78,25 +94,21 @@
                     android:textStyle="bold"
                     android:letterSpacing="0.04" />
 
-
             </LinearLayout>
 
             <!-- Avatar + Name block -->
-
-            <!-- Main form card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingBottom="48dp">
+                android:paddingBottom="24dp">
 
                 <!-- Avatar ring + FAB -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="136dp"
                     android:layout_height="136dp">
 
-                    <!-- Outer glow ring -->
                     <View
                         android:layout_width="136dp"
                         android:layout_height="136dp"
@@ -116,8 +128,7 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:tint="#90CAF9" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab_edit_photo"
@@ -135,7 +146,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- Name & subtitle hint -->
                 <TextView
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
@@ -158,13 +168,15 @@
 
             </LinearLayout>
 
+            <!-- Main Form Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="0dp"
-                android:layout_marginEnd="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="36dp"
-                app:cardElevation="24dp"
+                app:cardElevation="8dp"
                 app:cardBackgroundColor="#F0F4FF">
 
                 <LinearLayout
@@ -176,7 +188,7 @@
                     android:paddingTop="36dp"
                     android:paddingBottom="36dp">
 
-                    <!-- Section Label -->
+                    <!-- PERSONAL INFO -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -187,64 +199,67 @@
                         android:letterSpacing="0.15"
                         android:layout_marginBottom="20dp" />
 
-                    <!-- First Name -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="First Name"
-                        android:textColor="#455A64"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:layout_marginBottom="6dp" />
-
-                    <EditText
-                        android:id="@+id/editFirstName"
+                    <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
-                        android:layout_height="54dp"
-                        android:layout_marginBottom="20dp"
-                        android:background="@drawable/bg_input_modern"
-                        android:hint="Enter first name"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:textColor="#0D1B2A"
-                        android:textColorHint="#B0BEC5"
-                        android:textSize="15sp"
-                        android:inputType="textPersonName" />
-
-                    <!-- Last Name -->
-                    <TextView
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Last Name"
-                        android:textColor="#455A64"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:layout_marginBottom="6dp" />
+                        android:layout_marginBottom="16dp"
+                        android:hint="First Name"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#B0BEC5"
+                        app:boxStrokeWidth="1dp"
+                        app:hintTextColor="#1976D2">
 
-                    <EditText
-                        android:id="@+id/editLastName"
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editFirstName"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:inputType="textPersonName"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="#0D1B2A"
+                            android:textColorHint="#B0BEC5"
+                            android:textSize="15sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
-                        android:layout_height="54dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginBottom="28dp"
-                        android:background="@drawable/bg_input_modern"
-                        android:hint="Enter last name"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:textColor="#0D1B2A"
-                        android:textColorHint="#B0BEC5"
-                        android:textSize="15sp"
-                        android:inputType="textPersonName" />
+                        android:hint="Last Name"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#B0BEC5"
+                        app:boxStrokeWidth="1dp"
+                        app:hintTextColor="#1976D2">
 
-                    <!-- Divider -->
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editLastName"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:inputType="textPersonName"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="#0D1B2A"
+                            android:textColorHint="#B0BEC5"
+                            android:textSize="15sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="#E3EAF5"
                         android:layout_marginBottom="28dp" />
 
-                    <!-- Section Label -->
+                    <!-- ACCOUNT DETAILS -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -255,75 +270,64 @@
                         android:letterSpacing="0.15"
                         android:layout_marginBottom="20dp" />
 
-                    <!-- Email -->
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="New Password"
-                        android:textColor="#455A64"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:layout_marginBottom="6dp" />
+                        android:layout_marginBottom="16dp"
+                        android:hint="New Password"
+                        app:endIconMode="password_toggle"
+                        app:endIconTint="#1976D2"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#B0BEC5"
+                        app:boxStrokeWidth="1dp"
+                        app:hintTextColor="#1976D2">
 
-                        <com.google.android.material.textfield.TextInputLayout
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editNewPassword"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            app:hintEnabled="false"
-                            app:passwordToggleEnabled="true"
-                            app:passwordToggleTint="#1976D2"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                            android:layout_height="54dp"
+                            android:inputType="textPassword"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="#0D1B2A"
+                            android:textColorHint="#B0BEC5"
+                            android:textSize="15sp" />
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editNewPassword"
-                                android:layout_width="match_parent"
-                                android:layout_height="54dp"
-                                android:background="@drawable/bg_input_modern"
-                                android:hint="New Password"
-                                android:paddingStart="20dp"
-                                android:paddingEnd="52dp"
-                                android:textColor="#0D1B2A"
-                                android:textColorHint="#B0BEC5"
-                                android:textSize="15sp"
-                                android:inputType="textPassword" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Password -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Confirm New Password"
-                        android:textColor="#455A64"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:layout_marginBottom="6dp" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        app:hintEnabled="false"
-                        app:passwordToggleEnabled="true"
-                        app:passwordToggleTint="#1976D2"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        android:hint="Confirm New Password"
+                        app:endIconMode="password_toggle"
+                        app:endIconTint="#1976D2"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#B0BEC5"
+                        app:boxStrokeWidth="1dp"
+                        app:hintTextColor="#1976D2">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/editConfirmNewPassword"
                             android:layout_width="match_parent"
                             android:layout_height="54dp"
-                            android:background="@drawable/bg_input_modern"
-                            android:hint="Confirm new Password"
-                            android:paddingStart="20dp"
-                            android:paddingEnd="52dp"
+                            android:inputType="textPassword"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
                             android:textColor="#0D1B2A"
                             android:textColorHint="#B0BEC5"
-                            android:textSize="15sp"
-                            android:inputType="textPassword" />
+                            android:textSize="15sp" />
+
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Update Profile Button -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSaveProfile"
                         android:layout_width="match_parent"
@@ -341,10 +345,8 @@
                         app:iconTint="#FFFFFF"
                         app:iconGravity="textStart"
                         app:iconPadding="10dp"
-                        app:elevation="6dp"
-                        style="@style/Widget.MaterialComponents.Button" />
+                        app:elevation="0dp" />
 
-                    <!-- Log Out Button -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnLogout"
                         android:layout_width="match_parent"
@@ -361,8 +363,7 @@
                         app:icon="@android:drawable/ic_lock_power_off"
                         app:iconTint="#E53935"
                         app:iconGravity="textStart"
-                        app:iconPadding="10dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                        app:iconPadding="10dp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -370,4 +371,4 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

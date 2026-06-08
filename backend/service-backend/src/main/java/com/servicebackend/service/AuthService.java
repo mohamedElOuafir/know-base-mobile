@@ -10,6 +10,7 @@ import com.servicebackend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -84,6 +85,47 @@ public class AuthService {
         return Optional.empty();
 
     }
+
+
+    public AuthResponse updateProfile(String email, String firstName, String lastName,
+                                         String password, MultipartFile profileImage) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Update names
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+
+        // Update password only if provided
+        if (password != null && !password.trim().isEmpty()) {
+            user.setPassword(encoder.encode(password));
+        }
+
+        // Update profile image only if provided
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String imageUrl = fileUploadService.uploadProfileImageToSupabase(profileImage);
+            user.setProfileImage(imageUrl);
+        }
+
+        User savedUser = userRepository.save(user);
+
+        // Build response
+        AuthResponse dto = new AuthResponse();
+        dto.setEmail(savedUser.getEmail());
+        dto.setFirstName(savedUser.getFirstName());
+        dto.setLasName(savedUser.getLastName());
+        dto.setProfileImage(savedUser.getProfileImage());
+        dto.setAuthenticated(true);
+
+        // Regenerate token with updated info
+        String newToken = jwtUtil.generateToken(savedUser.getEmail());
+        dto.setToken(newToken);
+
+        return dto;
+    }
+
+
 
     public List<User> getAllUser() {
         return userRepository.findAll();

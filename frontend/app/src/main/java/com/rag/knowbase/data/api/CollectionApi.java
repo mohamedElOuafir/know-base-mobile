@@ -1,8 +1,6 @@
 package com.rag.knowbase.data.api;
 
 import com.rag.knowbase.data.dto.CollectionDetailsDto;
-import com.rag.knowbase.data.dto.DashboardStatsDto;
-import com.rag.knowbase.data.dto.FileUploadedDto;
 
 import java.util.List;
 
@@ -14,7 +12,7 @@ import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
-import retrofit2.http.Path;
+
 
 public interface CollectionApi {
     @GET("/collections")
@@ -31,9 +29,5 @@ public interface CollectionApi {
             @Part("chatName") RequestBody chatName,
             @Part List<MultipartBody.Part> files
     );
-
-
-
-
 
 }

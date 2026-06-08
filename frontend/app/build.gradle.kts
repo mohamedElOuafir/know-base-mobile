@@ -1,6 +1,10 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+
 
 android {
     namespace = "com.rag.knowbase"
@@ -18,6 +22,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {

@@ -10,7 +10,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp"
-        android:background="@android:color/white">
+        android:background="@android:color/white"
+        >
 
         <View
             android:layout_width="40dp"
@@ -163,17 +164,40 @@
             android:layout_marginTop="12dp"
             android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCreateConfirm"
+
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="56dp"
             android:layout_marginTop="32dp"
-            android:text="Create Collection"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="30dp"
-            app:backgroundTint="#378ADD" />
+            android:gravity="center"
+            android:id="@+id/create_collection_button_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/forgotPassword">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCreateConfirm"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Create Collection"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:cornerRadius="30dp"
+                app:backgroundTint="@color/blue" />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/createCollectionAnimation"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:visibility="gone"
+                android:layout_gravity="center"
+                app:indicatorColor="@color/white"/>
+
+        </FrameLayout>
+
+
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

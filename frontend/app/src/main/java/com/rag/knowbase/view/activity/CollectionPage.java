@@ -2,6 +2,9 @@ package com.rag.knowbase.view.activity;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -17,9 +20,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.textfield.TextInputEditText;
 import com.rag.knowbase.R;
 import com.rag.knowbase.data.api.CollectionApi;
 import com.rag.knowbase.data.api.DashboardApi;
@@ -48,6 +54,7 @@ import java.util.List;
 import android.content.Intent;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.rag.knowbase.model.UserCollection;
+import com.rag.knowbase.viewmodel.CollectionViewModel;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -59,21 +66,38 @@ import retrofit2.Response;
 
 public class CollectionPage extends AppCompatActivity {
 
-    private List<UserCollection> collections = new ArrayList<>();
-    private List<Uri> selectedFileUris = new ArrayList<>();
-
+    private CollectionViewModel viewModel;
     private RecyclerView recyclerViewCollection;
     private CollectionAdapter collectionAdapter;
     private LinearLayout emptyStateLayout;
-
     private LinearLayout selectedFilesContainer;
+    private TextInputEditText searchCollectionInput;
+    private Button newCollection;
+    private Button addNewCollectionEmptyState;
+    private Button btnCreateConfirm;
+    private CircularProgressIndicator createCollectionAnimation;
+    private BottomSheetDialog dialog;
     private ActivityResultLauncher<String[]> multiFileLauncher;
+
+    // Ajoutez ce flag
+    private boolean isRecreatingDialog = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_collection_page);
+
+        viewModel = new ViewModelProvider(this).get(CollectionViewModel.class);
+
+        // RESTAURER L'ÉTAT APRÈS ROTATION ÉCRAN
+        if (savedInstanceState != null) {
+            viewModel.isFilePicking = savedInstanceState.getBoolean("isFilePicking", false);
+            if (viewModel.isFilePicking) {
+                // Programme la réouverture après la création complète
+                new Handler().postDelayed(() -> showDialogNewCollection(), 500);
+            }
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.collection_page), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -85,36 +109,53 @@ public class CollectionPage extends AppCompatActivity {
         recyclerViewCollection = findViewById(R.id.rvCollections);
         recyclerViewCollection.setLayoutManager(new LinearLayoutManager(this));
 
-        collectionAdapter = new CollectionAdapter(collections, collection -> {
-            consultCollection(collection);
-        });
+        collectionAdapter = new CollectionAdapter(viewModel.collections, this::consultCollection);
         recyclerViewCollection.setAdapter(collectionAdapter);
 
-        SessionManager session = new SessionManager(this);
-        UserResponseDto user = session.getUser();
-        loadCollections("Bearer " + user.getToken());
+        searchCollectionInput = findViewById(R.id.searchCollectionInput);
+        searchCollectionInput.addTextChangedListener(new TextWatcher() {
+            @Override public void afterTextChanged(Editable s) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterCollections(s.toString().trim());
+            }
+        });
 
-        //pour sélection multiple
+        SessionManager session = new SessionManager(this);
+
+        if (viewModel.collections.isEmpty()) {
+            loadCollections("Bearer " + session.getUser().getToken());
+        } else {
+            updateEmptyState();
+        }
+
+        // CONTRAT POUR SÉLECTIONNER PLUSIEURS FICHIERS
         multiFileLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenMultipleDocuments(),
                 uris -> {
                     if (uris != null && !uris.isEmpty()) {
                         for (Uri uri : uris) {
-                            // Persistance de la permission de lecture
-                            getContentResolver().takePersistableUriPermission(
-                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            );
-                            if (!selectedFileUris.contains(uri)) {
-                                selectedFileUris.add(uri);
+                            try {
+                                getContentResolver().takePersistableUriPermission(
+                                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                );
+                                if (!viewModel.selectedFileUris.contains(uri)) {
+                                    viewModel.selectedFileUris.add(uri);
+                                }
+                            } catch (SecurityException e) {
+                                e.printStackTrace();
                             }
                         }
-                        refreshFileList(); // Rafraîchir la liste dans le dialog
                     }
+                    // Ne pas réouvrir ici, onResume le fera
                 }
         );
 
-        Button newCollection = findViewById(R.id.NewCollectionButton);
+        newCollection = findViewById(R.id.NewCollectionButton);
+        addNewCollectionEmptyState = findViewById(R.id.emptyStateNewButton);
         newCollection.setOnClickListener(v -> showDialogNewCollection());
+        addNewCollectionEmptyState.setOnClickListener(v -> showDialogNewCollection());
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.nav_bar);
         bottomNavigationView.setSelectedItemId(R.id.nav_collections);
@@ -137,95 +178,72 @@ public class CollectionPage extends AppCompatActivity {
         });
     }
 
-    private void updateEmptyState() {
-        if (collections.isEmpty()) {
-            emptyStateLayout.setVisibility(View.VISIBLE);
-            recyclerViewCollection.setVisibility(View.GONE);
-        } else {
-            emptyStateLayout.setVisibility(View.GONE);
-            recyclerViewCollection.setVisibility(View.VISIBLE);
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isFilePicking", viewModel.isFilePicking);
+        outState.putString("dialogName", viewModel.dialogName);
+        outState.putString("dialogDescription", viewModel.dialogDescription);
+        outState.putString("dialogChatName", viewModel.dialogChatName);
+
+        if (!viewModel.selectedFileUris.isEmpty()) {
+            ArrayList<String> uris = new ArrayList<>();
+            for (Uri uri : viewModel.selectedFileUris) {
+                uris.add(uri.toString());
+            }
+            outState.putStringArrayList("selectedFileUris", uris);
         }
     }
 
-    //Rafraîchit la liste des fichiers affichée dans le dialog
-    private void refreshFileList() {
-        if (selectedFilesContainer == null) return;
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        viewModel.dialogName = savedInstanceState.getString("dialogName", "");
+        viewModel.dialogDescription = savedInstanceState.getString("dialogDescription", "");
+        viewModel.dialogChatName = savedInstanceState.getString("dialogChatName", "");
 
-        selectedFilesContainer.removeAllViews();
-
-        if (selectedFileUris.isEmpty()) {
-            selectedFilesContainer.setVisibility(View.GONE);
-            return;
-        }
-
-        selectedFilesContainer.setVisibility(View.VISIBLE);
-
-        for (int i = 0; i < selectedFileUris.size(); i++) {
-            Uri uri = selectedFileUris.get(i);
-            String fileName = getFileName(uri);
-            int index = i;
-
-            // Ligne fichier
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            rowParams.setMargins(0, 8, 0, 8);
-            row.setLayoutParams(rowParams);
-
-            // Nom du fichier
-            TextView tvName = new TextView(this);
-            tvName.setText(fileName);
-            tvName.setTextColor(0xFF4B5563);
-            tvName.setTextSize(13);
-            LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
-            );
-            tvName.setLayoutParams(tvParams);
-
-            // Bouton supprimer
-            TextView btnRemove = new TextView(this);
-            btnRemove.setText("✕");
-            btnRemove.setTextColor(0xFFEF4444);
-            btnRemove.setTextSize(16);
-            btnRemove.setPadding(16, 0, 0, 0);
-            btnRemove.setOnClickListener(v -> {
-                selectedFileUris.remove(index);
-                refreshFileList();
-            });
-
-            row.addView(tvName);
-            row.addView(btnRemove);
-            selectedFilesContainer.addView(row);
-        }
-    }
-
-    // Récupère le nom lisible d'un fichier depuis son URI
-    private String getFileName(Uri uri) {
-        String result = null;
-        if (uri.getScheme().equals("content")) {
-            try (android.database.Cursor cursor = getContentResolver().query(
-                    uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-                    if (idx >= 0) result = cursor.getString(idx);
-                }
+        ArrayList<String> uris = savedInstanceState.getStringArrayList("selectedFileUris");
+        if (uris != null) {
+            viewModel.selectedFileUris.clear();
+            for (String uri : uris) {
+                viewModel.selectedFileUris.add(Uri.parse(uri));
             }
         }
-        if (result == null) {
-            result = uri.getLastPathSegment();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Réouvrir la dialog si on revient du file picker
+        if (viewModel.isFilePicking) {
+            viewModel.isFilePicking = false;
+            // Utiliser un délai plus long pour éviter les conflits
+            new Handler().postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    showDialogNewCollection();
+                }
+            }, 300);
         }
-        return result != null ? result : "Unknown file";
     }
 
     public void showDialogNewCollection() {
-        selectedFileUris.clear();
+        // Éviter les appels multiples
+        if (isRecreatingDialog) return;
+        isRecreatingDialog = true;
 
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        // Nettoyer l'ancienne dialog si elle existe
+        if (dialog != null && dialog.isShowing()) {
+            dialog.setOnDismissListener(null);
+            dialog.dismiss();
+        }
+
+        dialog = new BottomSheetDialog(this);
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        // Empêcher la fermeture au clic extérieur pendant le chargement
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(true);
 
         View view = getLayoutInflater().inflate(R.layout.dialog_new_collection, null);
 
@@ -233,12 +251,58 @@ public class CollectionPage extends AppCompatActivity {
         EditText editDescription = view.findViewById(R.id.editDescription);
         EditText editFirstChatName = view.findViewById(R.id.editFirstChatName);
         LinearLayout btnSelectFiles = view.findViewById(R.id.btnSelectFiles);
-        Button btnCreateConfirm = view.findViewById(R.id.btnCreateConfirm);
+        btnCreateConfirm = view.findViewById(R.id.btnCreateConfirm);
         selectedFilesContainer = view.findViewById(R.id.selectedFilesContainer);
+        createCollectionAnimation = view.findViewById(R.id.createCollectionAnimation);
 
-        btnSelectFiles.setOnClickListener(v ->
-                multiFileLauncher.launch(new String[]{"*/*"})
-        );
+        // Restaurer les valeurs depuis le ViewModel
+        editName.setText(viewModel.dialogName);
+        editDescription.setText(viewModel.dialogDescription);
+        editFirstChatName.setText(viewModel.dialogChatName);
+
+        if (!viewModel.dialogName.isEmpty()) {
+            editName.setSelection(editName.getText().length());
+        }
+
+        refreshFileList();
+
+        // Sauvegarder les changements en temps réel
+        TextWatcher watcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                viewModel.dialogName = editName.getText().toString().trim();
+                viewModel.dialogDescription = editDescription.getText().toString().trim();
+                viewModel.dialogChatName = editFirstChatName.getText().toString().trim();
+            }
+        };
+
+        editName.addTextChangedListener(watcher);
+        editDescription.addTextChangedListener(watcher);
+        editFirstChatName.addTextChangedListener(watcher);
+
+        btnSelectFiles.setOnClickListener(v -> {
+            // Sauvegarder immédiatement
+            viewModel.dialogName = editName.getText().toString().trim();
+            viewModel.dialogDescription = editDescription.getText().toString().trim();
+            viewModel.dialogChatName = editFirstChatName.getText().toString().trim();
+
+            viewModel.isFilePicking = true;
+            dialog.dismiss(); // Fermer proprement la dialog avant d'ouvrir le picker
+            multiFileLauncher.launch(new String[]{"*/*"});
+        });
+
+        // Cleanup quand l'utilisateur ferme la dialog
+        dialog.setOnDismissListener(d -> {
+            if (!viewModel.isFilePicking) {
+                viewModel.dialogName = "";
+                viewModel.dialogDescription = "";
+                viewModel.dialogChatName = "";
+                viewModel.selectedFileUris.clear();
+            }
+            isRecreatingDialog = false;
+        });
 
         btnCreateConfirm.setOnClickListener(v -> {
             String name = editName.getText().toString().trim();
@@ -250,23 +314,24 @@ public class CollectionPage extends AppCompatActivity {
                 return;
             }
 
+            showLoading();
+
             SessionManager session = new SessionManager(this);
             String token = "Bearer " + session.getToken();
 
-            //Construire les parts multipart
             RequestBody nameBody = RequestBody.create(name, MediaType.parse("text/plain"));
             RequestBody descBody = RequestBody.create(description, MediaType.parse("text/plain"));
             RequestBody chatNameBody = RequestBody.create(chatName, MediaType.parse("text/plain"));
 
             List<MultipartBody.Part> fileParts = new ArrayList<>();
-            for (Uri uri : selectedFileUris) {
+            for (Uri uri : viewModel.selectedFileUris) {
                 String fileName = getFileName(uri);
                 try {
                     InputStream inputStream = getContentResolver().openInputStream(uri);
                     byte[] bytes = inputStream.readAllBytes();
-                    RequestBody fileBody = RequestBody.create(bytes, MediaType.parse(
-                            getContentResolver().getType(uri)
-                    ));
+                    RequestBody fileBody = RequestBody.create(
+                            bytes, MediaType.parse(getContentResolver().getType(uri))
+                    );
                     fileParts.add(MultipartBody.Part.createFormData("files", fileName, fileBody));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -277,40 +342,164 @@ public class CollectionPage extends AppCompatActivity {
             collectionApi.addNewCollection(token, nameBody, descBody, chatNameBody, fileParts)
                     .enqueue(new Callback<CollectionDetailsDto>() {
                         @Override
-                        public void onResponse(Call<CollectionDetailsDto> call, Response<CollectionDetailsDto> response) {
-
+                        public void onResponse(Call<CollectionDetailsDto> call,
+                                               Response<CollectionDetailsDto> response) {
                             if (response.isSuccessful() && response.body() != null) {
+                                UserCollection userCollection =
+                                        CollectionMapper.convertDtoToCollectionModel(response.body());
 
-                                collections.add(CollectionMapper.convertDtoToCollectionModel(response.body()));
-                                collectionAdapter.notifyItemInserted(collections.size() - 1);
+                                viewModel.collections.add(userCollection);
+                                collectionAdapter.notifyItemInserted(viewModel.collections.size() - 1);
+                                viewModel.allCollections.add(userCollection);
                                 updateEmptyState();
-                                Toast.makeText(CollectionPage.this, "Collection '" + name + "' created!", Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
+
+                                boolean hadFiles = !userCollection.getFileUploadeds().isEmpty();
+
+                                // Cleanup
+                                viewModel.dialogName = "";
+                                viewModel.dialogDescription = "";
+                                viewModel.dialogChatName = "";
+                                viewModel.selectedFileUris.clear();
+                                viewModel.isFilePicking = false;
+
+                                if (dialog != null) {
+                                    dialog.setOnDismissListener(null);
+                                    dialog.dismiss();
+                                }
+
+                                if (!userCollection.getChats().isEmpty()) {
+                                    Chat firstChat = userCollection.getChats().get(0);
+                                    Intent intent = new Intent(CollectionPage.this, ChatbotActivity.class);
+                                    intent.putExtra("chat", firstChat);
+                                    intent.putExtra("hasFiles", hadFiles);
+                                    startActivity(intent);
+                                }
                             } else {
-                                Toast.makeText(CollectionPage.this, "Error: " + response.code(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(CollectionPage.this,
+                                        "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                             }
+                            hideLoading();
                         }
 
                         @Override
                         public void onFailure(Call<CollectionDetailsDto> call, Throwable t) {
-                            Toast.makeText(CollectionPage.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CollectionPage.this,
+                                    "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            hideLoading();
                         }
                     });
         });
 
+        dialog.setOnShowListener(d -> isRecreatingDialog = false);
         dialog.setContentView(view);
         dialog.show();
+    }
+
+
+    private void refreshFileList() {
+        if (selectedFilesContainer == null) return;
+        selectedFilesContainer.removeAllViews();
+
+        if (viewModel.selectedFileUris.isEmpty()) {
+            selectedFilesContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        selectedFilesContainer.setVisibility(View.VISIBLE);
+
+        for (int i = 0; i < viewModel.selectedFileUris.size(); i++) {
+            Uri uri = viewModel.selectedFileUris.get(i);
+            String fileName = getFileName(uri);
+            final int index = i;
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            rowParams.setMargins(0, 8, 0, 8);
+            row.setLayoutParams(rowParams);
+
+            TextView tvName = new TextView(this);
+            tvName.setText(fileName);
+            tvName.setTextColor(0xFF4B5563);
+            tvName.setTextSize(13);
+            tvName.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            ));
+
+            TextView btnRemove = new TextView(this);
+            btnRemove.setText("✕");
+            btnRemove.setTextColor(0xFFEF4444);
+            btnRemove.setTextSize(16);
+            btnRemove.setPadding(16, 0, 0, 0);
+            btnRemove.setOnClickListener(v -> {
+                viewModel.selectedFileUris.remove(index);
+                refreshFileList();
+            });
+
+            row.addView(tvName);
+            row.addView(btnRemove);
+            selectedFilesContainer.addView(row);
+        }
+    }
+
+    private void updateEmptyState() {
+        if (viewModel.collections.isEmpty()) {
+            emptyStateLayout.setVisibility(View.VISIBLE);
+            recyclerViewCollection.setVisibility(View.GONE);
+        } else {
+            emptyStateLayout.setVisibility(View.GONE);
+            recyclerViewCollection.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void filterCollections(String query) {
+        viewModel.collections.clear();
+        if (query.isEmpty()) {
+            viewModel.collections.addAll(viewModel.allCollections);
+        } else {
+            String lower = query.toLowerCase();
+            for (UserCollection c : viewModel.allCollections) {
+                if (c.getNameCollection().toLowerCase().contains(lower)) {
+                    viewModel.collections.add(c);
+                }
+            }
+        }
+        collectionAdapter.notifyDataSetChanged();
+        updateEmptyState();
+    }
+
+    private String getFileName(Uri uri) {
+        String result = null;
+        if ("content".equals(uri.getScheme())) {
+            try (android.database.Cursor cursor = getContentResolver().query(
+                    uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idx = cursor.getColumnIndex(
+                            android.provider.OpenableColumns.DISPLAY_NAME);
+                    if (idx >= 0) result = cursor.getString(idx);
+                }
+            }
+        }
+        if (result == null) result = uri.getLastPathSegment();
+        return result != null ? result : "Unknown file";
     }
 
     public void loadCollections(String token) {
         CollectionApi collectionApi = RetrofitBackend.getCollectionApi();
         collectionApi.getUserCollection(token).enqueue(new Callback<List<CollectionDetailsDto>>() {
             @Override
-            public void onResponse(Call<List<CollectionDetailsDto>> call, Response<List<CollectionDetailsDto>> response) {
-
+            public void onResponse(Call<List<CollectionDetailsDto>> call,
+                                   Response<List<CollectionDetailsDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    collections.clear();
-                    collections.addAll(CollectionMapper.convertDtoToCollectionListModel(response.body()));
+                    viewModel.collections.clear();
+                    viewModel.collections.addAll(
+                            CollectionMapper.convertDtoToCollectionListModel(response.body()));
+                    viewModel.allCollections.clear();
+                    viewModel.allCollections.addAll(viewModel.collections);
                     collectionAdapter.notifyDataSetChanged();
                 }
                 updateEmptyState();
@@ -324,9 +513,17 @@ public class CollectionPage extends AppCompatActivity {
         });
     }
 
+    private void showLoading() {
+        btnCreateConfirm.setEnabled(false);
+        btnCreateConfirm.setText("");
+        createCollectionAnimation.setVisibility(View.VISIBLE);
+    }
 
-
-
+    private void hideLoading() {
+        btnCreateConfirm.setEnabled(true);
+        btnCreateConfirm.setText("Create Collection");
+        createCollectionAnimation.setVisibility(View.GONE);
+    }
 
     public void consultCollection(UserCollection collection) {
         Intent intent = new Intent(this, ConsultCollection.class);

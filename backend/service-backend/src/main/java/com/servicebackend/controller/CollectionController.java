@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/collections")
-@CrossOrigin(origins = "*")
 public class CollectionController {
 
     @Autowired

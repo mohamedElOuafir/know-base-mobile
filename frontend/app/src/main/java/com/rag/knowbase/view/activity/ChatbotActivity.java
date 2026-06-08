@@ -5,9 +5,12 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -52,23 +55,18 @@ import retrofit2.Response;
 
 public class ChatbotActivity extends AppCompatActivity {
 
-    // UI
     private RecyclerView recyclerViewMessages;
     private EditText editTextMessage;
     private FloatingActionButton btnSend;
-    private ImageButton btnUpload;
-    private ImageButton btnMenu;
-    private DrawerLayout drawerLayout;
+    private TextView tvChatName;
+    private ImageButton btnBack;
 
-    // Data
     private final List<Message> messageList = new ArrayList<>();
     private MessageAdapter messageAdapter;
     private Chat chat;
 
-    // State
     private boolean isWaitingForResponse = false;
 
-    // File picker
     private ActivityResultLauncher<String[]> fileLauncher;
 
     @Override
@@ -81,19 +79,18 @@ public class ChatbotActivity extends AppCompatActivity {
         setupInsets();
         loadIntentData();
         setupRecyclerView();
-        setupDrawer();
         setupFileLauncher();
         setupListeners();
         loadChatHistory();
+        showProcessingBanner();
     }
 
     private void initViews() {
         recyclerViewMessages = findViewById(R.id.recycler_view_messages);
-        editTextMessage      = findViewById(R.id.edit_text_message);
-        btnSend              = findViewById(R.id.btnsend);
-        btnUpload            = findViewById(R.id.btnUpload);
-        btnMenu              = findViewById(R.id.Menu);
-        drawerLayout         = findViewById(R.id.drawer_layout);
+        editTextMessage = findViewById(R.id.edit_text_message);
+        btnSend = findViewById(R.id.btnsend);
+        tvChatName = findViewById(R.id.tvChatName);
+        btnBack = findViewById(R.id.btnBackChat);
     }
 
     private void setupRecyclerView() {
@@ -101,10 +98,6 @@ public class ChatbotActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerViewMessages.setLayoutManager(layoutManager);
         recyclerViewMessages.setAdapter(messageAdapter);
-    }
-
-    private void setupDrawer() {
-        btnMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
     }
 
     private void setupInsets() {
@@ -127,12 +120,12 @@ public class ChatbotActivity extends AppCompatActivity {
         if (chat == null) {
             Toast.makeText(this, "Chat introuvable", Toast.LENGTH_SHORT).show();
             finish();
+            return;
         }
+        tvChatName.setText(chat.getName());
     }
 
-    // Load existing messages from the chat object passed in intent
     private void loadChatHistory() {
-
         if (chat.getMessages() != null && !chat.getMessages().isEmpty()) {
             messageList.addAll(chat.getMessages());
             messageAdapter.notifyDataSetChanged();
@@ -140,7 +133,7 @@ public class ChatbotActivity extends AppCompatActivity {
         } else {
             SessionManager sessionManager = new SessionManager(this);
             UserResponseDto user = sessionManager.getUser();
-            addMessageLocally("Hello how can i help you, " + user.getFirstName(), "bot");
+            addMessageLocally("Hello, how can I help you " + user.getFirstName() + "?", "bot");
         }
     }
 
@@ -153,7 +146,6 @@ public class ChatbotActivity extends AppCompatActivity {
                         getContentResolver().takePersistableUriPermission(
                                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
                         );
-                        //uploadFileToChat(uri);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -163,9 +155,8 @@ public class ChatbotActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnSend.setOnClickListener(v -> sendUserMessage());
-        btnUpload.setOnClickListener(v -> fileLauncher.launch(new String[]{"*/*"}));
+        btnBack.setOnClickListener(v -> finish());
     }
-
 
     private void sendUserMessage() {
         String text = editTextMessage.getText().toString().trim();
@@ -179,11 +170,9 @@ public class ChatbotActivity extends AppCompatActivity {
         isWaitingForResponse = true;
         btnSend.setEnabled(false);
 
-        // Show user message immediately
         addMessageLocally(text, "user");
         editTextMessage.setText("");
 
-        // Send to backend
         sendMessageToBackend(text);
     }
 
@@ -197,15 +186,12 @@ public class ChatbotActivity extends AppCompatActivity {
         request.setContent(text);
         request.setIdChat(chat.getIdChat());
 
-
-        // Show typing indicator
         addMessageLocally("...", "bot");
         int typingIndex = messageList.size() - 1;
 
         messageApi.sendMessage(token, request).enqueue(new Callback<MessageDto>() {
             @Override
             public void onResponse(Call<MessageDto> call, Response<MessageDto> response) {
-                // Remove typing indicator
                 messageList.remove(typingIndex);
                 messageAdapter.notifyItemRemoved(typingIndex);
 
@@ -215,8 +201,7 @@ public class ChatbotActivity extends AppCompatActivity {
                     messageAdapter.notifyItemInserted(messageList.size() - 1);
                     recyclerViewMessages.scrollToPosition(messageList.size() - 1);
                 } else {
-                    Toast.makeText(ChatbotActivity.this,
-                            "Error: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatbotActivity.this, "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
 
                 isWaitingForResponse = false;
@@ -225,12 +210,10 @@ public class ChatbotActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<MessageDto> call, Throwable t) {
-                // Remove typing indicator
                 messageList.remove(typingIndex);
                 messageAdapter.notifyItemRemoved(typingIndex);
 
-                Toast.makeText(ChatbotActivity.this,
-                        "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatbotActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
 
                 isWaitingForResponse = false;
                 btnSend.setEnabled(true);
@@ -238,63 +221,30 @@ public class ChatbotActivity extends AppCompatActivity {
         });
     }
 
+    private void showProcessingBanner() {
+        if (chat == null) return;
 
-    /*private void uploadFileToChat(Uri uri) {
-        SessionManager session = new SessionManager(this);
-        String token = session.getToken();
+        boolean hasFiles = getIntent().getBooleanExtra("hasFiles", false);
+        if (!hasFiles) return;
 
-        String fileName = getFileName(uri);
-
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(uri);
-            byte[] bytes = inputStream.readAllBytes();
-            RequestBody fileBody = RequestBody.create(bytes, MediaType.parse(getContentResolver().getType(uri)));
-            MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", fileName, fileBody);
-            RequestBody chatIdBody = RequestBody.create(String.valueOf(chat.getIdChat()), MediaType.parse("text/plain"));
-
-            CollectionApi collectionApi = RetrofitBackend.getCollectionApi();
-            collectionApi.uploadFile(token, chatIdBody, filePart).enqueue(new Callback<FileUploadedDto>() {
-                        @Override
-                        public void onResponse(Call<FileUploadedDto> call, Response<FileUploadedDto> response) {
-                            if (response.isSuccessful()) {
-                                Toast.makeText(ChatbotActivity.this, "File uploaded: " + fileName, Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(ChatbotActivity.this, "Upload failed: " + response.code(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<FileUploadedDto> call, Throwable t) {
-                            Toast.makeText(ChatbotActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Failed to read file", Toast.LENGTH_SHORT).show();
+        View banner = findViewById(R.id.processingBanner);
+        if (banner != null) {
+            banner.setAlpha(1f);
+            banner.setVisibility(View.VISIBLE);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (!isFinishing()) {
+                    banner.animate().alpha(0f).setDuration(500).withEndAction(() ->
+                            banner.setVisibility(View.GONE)
+                    ).start();
+                }
+            }, 6000);
         }
-    }*/
+    }
 
-
-    // Add a local-only message (not persisted, e.g. welcome or typing indicator)
     private void addMessageLocally(String content, String role) {
         Message message = new Message(null, content, new Date(), role, chat);
         messageList.add(message);
         messageAdapter.notifyItemInserted(messageList.size() - 1);
         recyclerViewMessages.scrollToPosition(messageList.size() - 1);
-    }
-
-    private String getFileName(Uri uri) {
-        String result = null;
-        if ("content".equals(uri.getScheme())) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    if (idx >= 0) result = cursor.getString(idx);
-                }
-            }
-        }
-        if (result == null) result = uri.getLastPathSegment();
-        return result != null ? result : "Unknown file";
     }
 }

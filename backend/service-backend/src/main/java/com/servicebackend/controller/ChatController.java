@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/chat")
-@CrossOrigin(origins = "*")
 public class ChatController {
 
     @Autowired
@@ -31,7 +30,7 @@ public class ChatController {
     @PostMapping("/{idCollection}")
     public ResponseEntity<ChatDto> createChat(
             Authentication authentication,
-            @PathVariable Long idCollection,
+            @PathVariable("idCollection") Long idCollection,
             @Param("chatName") String chatName
     ) {
         String email = authentication.getName();
