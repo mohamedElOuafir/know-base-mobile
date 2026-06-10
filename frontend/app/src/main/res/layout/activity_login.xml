@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5"
-    tools:context=".Login"
+    tools:context=".view.activity.Login"
     >
 
     <ImageView
@@ -64,7 +64,7 @@
 
         <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/emailLogin"
+            android:id="@+id/email_login_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -85,6 +85,7 @@
 
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
@@ -95,7 +96,7 @@
 
         <!-- Password -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/passwordLogin"
+            android:id="@+id/password_login_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -111,11 +112,14 @@
             app:boxStrokeColor="@color/blue"
             app:hintTextColor="@color/blue"
             app:cursorColor="@color/blue"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/blue"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/emailLogin">
+            app:layout_constraintTop_toBottomOf="@id/email_login_layout">
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/passwordLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
@@ -135,27 +139,60 @@
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/passwordLogin" />
+            app:layout_constraintTop_toBottomOf="@id/password_login_layout" />
 
-        <!-- Login Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/loginButton"
+        <!-- Error Message -->
+        <TextView
+            android:id="@+id/errorMessageLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textColor="@color/red"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/forgotPassword" />
+
+
+
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="32dp"
-            android:text="Login"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"
-            app:backgroundTint="@color/blue"
-            app:cornerRadius="28dp"
-            app:elevation="4dp"
+            android:gravity="center"
+            android:id="@+id/login_button_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/forgotPassword"
-            android:onClick="handleLoginClick"
-            />
+            app:layout_constraintTop_toBottomOf="@id/forgotPassword">
 
+            <!-- Login Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Login"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/blue"
+                app:cornerRadius="28dp"
+                app:elevation="4dp"
+
+                />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/loginAnimation"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:visibility="gone"
+                android:layout_gravity="center"
+                app:indicatorColor="@color/white"/>
+
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -163,7 +200,7 @@
             android:layout_marginTop="24dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/loginButton"
+            app:layout_constraintTop_toBottomOf="@id/login_button_layout"
             >
 
             <!-- Register -->

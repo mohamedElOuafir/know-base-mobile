@@ -3,7 +3,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#378ADD</color>
+    <color name="green">#4BB543</color>
     <color name="grey">#999999</color>
+    <color name="red">#ff968f</color>
+    <color name="chat_bg_blue">#EAF3FB</color>
+    <color name="bg_green">#D6FFD7</color>
     <color name="bg_blue">#B5D4F4</color>
     <color name="bg_input">#e8e9ef</color>
     <color name="border_subtle">#D3D1C7</color>

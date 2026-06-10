@@ -1,0 +1,131 @@
+name: know-base-services
+
+services:
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: service-backend-kafka
+
+    environment:
+      KAFKA_BROKER_ID: 1
+
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+
+    depends_on:
+      - zookeeper
+
+    networks:
+      - know-base-network
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: service-backend-zookeeper
+
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+    ports:
+      - "2181:2181"
+
+    networks:
+      - know-base-network
+
+
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - know-base-network
+
+
+
+  backend:
+    build: ./service-backend
+    container_name: service-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${SECRET_KEY}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      KAFKA_BOOTSTRAP_SERVER: ${KAFKA_BOOTSTRAP_SERVER}
+    env_file:
+      - ./service-backend/.env
+    networks:
+      - know-base-network
+  
+
+  rag-api:
+    build: ./RAG-service
+    container_name: rag-api
+    command: uvicorn src.api.api_query_response:app --host 0.0.0.0 --port 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./RAG-service/.env
+    networks:
+      - know-base-network
+    
+
+  rag-consumer:
+    build: ./RAG-service
+    container_name: rag-consumer
+    command: python -m src.consumer.kafka_consumer
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./RAG-service/.env
+
+    networks:
+      - know-base-network
+
+volumes:
+  postgres_data:
+
+networks:
+  know-base-network:
+    driver: bridge
+
